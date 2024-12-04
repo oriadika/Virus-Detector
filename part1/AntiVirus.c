@@ -27,7 +27,7 @@ typedef struct virus
 // Define the link struct
 typedef struct link
 {
-    link *nextVirus;
+    struct link *nextVirus;
     virus *vir;
 } link;
 
@@ -54,7 +54,7 @@ char fileNameSig[256];       // Signature file name
 FILE *signature_File = NULL; // Signature file pointer
 
 FILE *suspected_File = NULL;      // Suspected file pointer
-char *suspected_File_Name = NULL; // Suspected file name
+char suspected_File_Name[256]; // Suspected file name
 
 link *virus_list = NULL; // Head of the linked list
 
@@ -109,9 +109,15 @@ int main(int argc, char *argv[])
         printf("Usage: %s <file> [-d]\n", argv[0]);
         return 1;
     }
-
+    
     memccpy(suspected_File_Name, argv[1], 0, strlen(argv[1])); // copy the file name to the global variable
+
+    // Safely copy the string
+    strncpy(suspected_File_Name, argv[1], strlen(argv[1]) + 1);
+
+
     suspected_File = fopen(argv[1], "rb");
+    
     // Check if a file is loaded successfully
     if (!suspected_File)
     {
@@ -139,15 +145,14 @@ int main(int argc, char *argv[])
 
     while (!feof(stdin))
     {
-
         // Display menu
         printf("Select operation from the following menu:\n");
 
-        int bound = sizeof(funcs) / sizeof(funcs[0]);
+        int bound = sizeof(funcs) / sizeof(funcs[0]) - 1;
         for (int i = 0; i < bound; i++)
             printf("%i: %s\n", i, funcs[i].name);
 
-        printf("Enter your choice: ");
+        printf("\nEnter your choice: ");
 
         // Read user input
         if (fgets(input, 16, stdin))
