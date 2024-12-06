@@ -50,13 +50,13 @@ typedef struct fun_desc
 int debugMode = 0; // Debug mode flag
 int endian = 0;    // Endian flag (0 for little endian, 1 for big endian)
 
-char fileNameSig[256];       // Signature file name
-FILE *signature_File = NULL; // Signature file pointer
+char fileNameSig[256];       // Signature file name                 For loadsignatures and print signatures
+FILE *signature_File = NULL; // Signature file pointer              For loadsignatures and print signatures
 
-FILE *suspected_File = NULL;      // Suspected file pointer
-char suspected_File_Name[256]; // Suspected file name
+FILE *suspected_File = NULL;      // Suspected file pointer         For fixFile and detectFile
+char suspected_File_Name[256]; // Suspected file name               For fixFile and detectFile
 
-link *virus_list = NULL; // Head of the linked list
+link *virus_list = NULL; // Head of the linked list                
 
 
 
@@ -104,6 +104,7 @@ void quit(); /* Exit the program */
 int main(int argc, char *argv[])
 {
 
+    /*
     if (argc < 2)
     {
         printf("Usage: %s <file> [-d]\n", argv[0]);
@@ -131,7 +132,7 @@ int main(int argc, char *argv[])
 
     strcpy(fileNameSig, "signatures-L");
     signature_File = fopen(fileNameSig, "rb");
-
+*/
     char input[256]; // Buffer for user input
     int choice;
     char *endptr;
