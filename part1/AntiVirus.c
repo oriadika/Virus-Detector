@@ -483,25 +483,32 @@ void list_print(link *virus_list, FILE *output)
 // Detect viruses in a file
 void DetectViruses()
 {
-    // Check if a file is loaded
+
+    suspected_File = NULL;
+    for(int i = 0; i < sizeof(virus_array); i++)
+    {
+        virus_array[i] = 0;
+    }
+    virus_array_size = 0;
+    
+
+
+    fprintf(stdout, "Enter the suspected file name: ");
+    if(fgets(suspected_File_Name, 256, stdin) == NULL)
+    {
+        fprintf(stderr, "Error: reading from input\n");
+        return;
+    }
+    suspected_File_Name[strcspn(suspected_File_Name, "\n")] = '\0'; // Remove the newline character
+    suspected_File = fopen(suspected_File_Name, "rb");      // Open the file
+
     if (suspected_File == NULL)
     {
-        fprintf(stdout, "Enter the suspected file name: ");
-        if(fgets(suspected_File_Name, 256, stdin) == NULL)
-        {
-            fprintf(stderr, "Error: reading from input\n");
-            return;
-        }
-        suspected_File_Name[strcspn(suspected_File_Name, "\n")] = '\0'; // Remove the newline character
-        suspected_File = fopen(suspected_File_Name, "rb");      // Open the file
-
-        if (suspected_File == NULL)
-        {
-            fprintf(stderr, "Error: cannot open file\n");
-            return;
-        }
-
+        fprintf(stderr, "Error: cannot open file\n");
+        return;
     }
+
+
 
 
 
@@ -526,7 +533,7 @@ void DetectViruses()
 
     detect_virus(buffer, reader, virus_list); // Detect viruses in the buffer
 
-    fseek(suspected_File, 0, SEEK_SET);       // reset the file pointer
+    fclose(suspected_File);
     
 }
 
@@ -545,8 +552,9 @@ void detect_virus(char *buffer, unsigned int size, link *virus_list)
             if (memcmp(buffer + i, v->sig, v->SigSize) == 0)
             {
                 // Virus detected
+                printf("\n");
                 printf("Virus detected!\n");
-                printf("Starting byte: %u\n", i);
+                printf("Starting byte: %d\n", i);
                 printf("Virus name: %s\n", v->virusName);
                 printf("Virus size: %u\n\n", v->SigSize);
 
@@ -587,12 +595,12 @@ void FixFile()
         return;
     }
 
-    fclose(suspected_File);
-    
+    fprintf(stdout, "Fixing file: %s\n", suspected_File_Name);
 
     link *current = virus_list;
     for(int i = 0; i < virus_array_size; i++)
     {
+        fprintf(stdout, "Neutralizing virus at offset %d\n", virus_array[i]);
         netural_virus(suspected_File_Name, virus_array[i]);
     }
 }
@@ -624,6 +632,10 @@ void netural_virus(char *fileName, int signatureOffset)
         fprintf(stderr, "Error: cannot write to file\n");
         fclose(file);
         return;
+    }
+
+    else{
+        fprintf(stdout, "Virus neutralized in %d offset\n", signatureOffset);
     }
 
     fclose(file);
