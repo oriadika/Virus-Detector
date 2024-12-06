@@ -58,7 +58,7 @@ char suspected_File_Name[256]; // Suspected file name               For fixFile 
 
 link *virus_list = NULL; // Head of the linked list                
 
-char virus_array[10000] = {0}; // Array for the file content
+int virus_array[10000] = {0}; // Array for the file content
 int virus_array_size = 0;      // Size of the Array
 
 
@@ -485,11 +485,12 @@ void DetectViruses()
 {
 
     suspected_File = NULL;
-    for(int i = 0; i < sizeof(virus_array); i++)
+    for (int i = 0; i < virus_array_size; i++)
     {
         virus_array[i] = 0;
     }
-    virus_array_size = 0;
+    
+    virus_array_size = 0;     // Size of the Array
     
 
 
@@ -625,20 +626,21 @@ void netural_virus(char *fileName, int signatureOffset)
         fclose(file);
         return;
     }
+
+    unsigned char neutralized_signature = 0xC3;
     
-    // Write the neutralized signature
-    if (fputc(0xC3, file) == EOF) // RETURN = 0xC3
+   size_t bytes_written = fwrite(&neutralized_signature, sizeof(unsigned char), 1, file);
+    if (bytes_written != 1) // Check if fwrite succeeded
     {
         fprintf(stderr, "Error: cannot write to file\n");
         fclose(file);
         return;
     }
 
-    else{
-        fprintf(stdout, "Virus neutralized in %d offset\n", signatureOffset);
-    }
+    fprintf(stdout, "Virus neutralized at offset %d\n", signatureOffset);
 
     fclose(file);
+
 }
 
 
