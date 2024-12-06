@@ -58,7 +58,8 @@ char suspected_File_Name[256]; // Suspected file name               For fixFile 
 
 link *virus_list = NULL; // Head of the linked list                
 
-
+char virus_array[10000] = {0}; // Array for the file content
+int virus_array_size = 0;      // Size of the Array
 
 
 
@@ -271,7 +272,8 @@ virus *readVirus(FILE *file)
  */
 void printVirus(virus *v, FILE *output)
 {
-    fprintf(output, "Virus name: %d\n", v->virusName);
+    fprintf(output, "Virus name in Hexa: %d\n", v->virusName);
+    fprintf(output, "Virus name : %s\n", v->virusName);
     fprintf(output, "Virus size: %d\n", v->SigSize);
     fprintf(output, "Signature:\n");
 
@@ -384,18 +386,32 @@ void list_free(link *virus_list)
  */
 void LoadSignatures()
 {
-    if (!signature_File)
-    {
-        fprintf(stderr, "Error: no file loaded\n");
-        return;
-    }
+    if(signature_File == NULL)
+        {   
+            fprintf(stdout, "Enter the signature file name: ");
+            if(fgets(fileNameSig, 256, stdin) == NULL)
+            {
+                fprintf(stderr, "Error: reading from input\n");
+                return;
+            }
+            fileNameSig[strcspn(fileNameSig, "\n")] = '\0'; // Remove the newline character
+            signature_File = fopen(fileNameSig, "rb");      // Open the file
 
-    if (virus_list){
-        list_free(virus_list);
-        virus_list = NULL; 
-    }
+            if (!signature_File)
+            {
+                fprintf(stderr, "Error: cannot open file\n");
+                return;
+            }
 
-    virus_list = loadSignatures(signature_File);
+            virus_list = loadSignatures(signature_File);
+
+        }
+
+    else
+        {
+            fprintf(stdout, "Alredy have file to take signatures from: %s", fileNameSig );
+        }
+    
 }
 
 /**
@@ -468,11 +484,26 @@ void list_print(link *virus_list, FILE *output)
 void DetectViruses()
 {
     // Check if a file is loaded
-    if (!suspected_File)
+    if (suspected_File == NULL)
     {
-        fprintf(stderr, "Error: no file loaded\n");
-        return;
+        fprintf(stdout, "Enter the suspected file name: ");
+        if(fgets(suspected_File_Name, 256, stdin) == NULL)
+        {
+            fprintf(stderr, "Error: reading from input\n");
+            return;
+        }
+        suspected_File_Name[strcspn(suspected_File_Name, "\n")] = '\0'; // Remove the newline character
+        suspected_File = fopen(suspected_File_Name, "rb");      // Open the file
+
+        if (suspected_File == NULL)
+        {
+            fprintf(stderr, "Error: cannot open file\n");
+            return;
+        }
+
     }
+
+
 
     // Check if signatures are loaded
     if (!virus_list)
@@ -484,6 +515,8 @@ void DetectViruses()
     char buffer[10000];
     int reader;
 
+    fseek(suspected_File, 0, SEEK_SET); // reset the file pointer if called few times
+
     // Read the file
     if (!(reader = fread(buffer, 1, 10000, suspected_File)))
     {
@@ -492,7 +525,9 @@ void DetectViruses()
     }
 
     detect_virus(buffer, reader, virus_list); // Detect viruses in the buffer
+
     fseek(suspected_File, 0, SEEK_SET);       // reset the file pointer
+    
 }
 
 // Detect viruses in a buffer
@@ -513,10 +548,22 @@ void detect_virus(char *buffer, unsigned int size, link *virus_list)
                 printf("Virus detected!\n");
                 printf("Starting byte: %u\n", i);
                 printf("Virus name: %s\n", v->virusName);
-                printf("Virus size: %u\n", v->SigSize);
+                printf("Virus size: %u\n\n", v->SigSize);
+
+                  // Store the offset in the global array
+                if (virus_array_size < sizeof(virus_array)) {
+                    virus_array[virus_array_size++] = i;
+                } else {
+                    fprintf(stderr, "Warning: virus_array is full, cannot store more offsets\n");
+                }
             }
         }
         current = current->nextVirus;
+    }
+
+    if (virus_array_size == 0)
+    {
+        printf("No viruses detected\n");
     }
 }
 
@@ -532,16 +579,6 @@ void detect_virus(char *buffer, unsigned int size, link *virus_list)
  */
 void FixFile()
 {
-    // Check if a file is loaded
-    if (!suspected_File)
-        suspected_File = fopen(suspected_File_Name, "rb+");
-
-    // Check if a file is loaded successfully
-    if (!suspected_File)
-    {
-        fprintf(stderr, "Error: cannot open file\n");
-        return;
-    }
 
     // Check if signatures are loaded
     if (!virus_list)
@@ -550,41 +587,14 @@ void FixFile()
         return;
     }
 
-    char buffer[10000] = {0}; // Initialize the buffer to 0
-    int reader;
-
-    // Read the file
-    if (!(reader = fread(buffer, 1, 10000, suspected_File)))
-    {
-        fprintf(stderr, "Error: reading file\n");
-        return;
-    }
-
     fclose(suspected_File);
-    suspected_File = NULL;
+    
 
     link *current = virus_list;
-    while (current != NULL)
+    for(int i = 0; i < virus_array_size; i++)
     {
-        virus *v = current->vir;
-        for (int i = 0; i < reader; i++)
-        {
-            if (memcmp(buffer + i, v->sig, v->SigSize) == 0)
-            {
-                printf("Virus detected!\n");
-                printf("Starting byte: %d\n", i);
-                printf("Virus name: %s\n", v->virusName);
-                printf("Virus size: %d\n", v->SigSize);
-                // Fix the file
-                netural_virus(suspected_File_Name, i);
-            }
-        }
-
-        current = current->nextVirus;
+        netural_virus(suspected_File_Name, virus_array[i]);
     }
-
-    // Reopen the file
-    suspected_File = fopen(suspected_File_Name, "rb");
 }
 
 /**
