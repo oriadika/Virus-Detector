@@ -373,7 +373,9 @@ void list_free(link *virus_list)
     {
         link *next = current->nextVirus;
         free(current->vir->sig); // Free the signature
+        current->vir->sig = NULL;
         free(current->vir);      // Free the virus
+        current->vir = NULL;
         free(current);           // Free the link
         current = next;
     }
@@ -656,9 +658,15 @@ void quit()
 
     list_free(virus_list);
     if (signature_File)
+    {
         fclose(signature_File);
+        signature_File = NULL;
+    }
     if (suspected_File)
+    {
         fclose(suspected_File);
+        suspected_File = NULL;
+        }
 
     exit(0);
 }
