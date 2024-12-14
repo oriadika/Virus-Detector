@@ -407,12 +407,17 @@ void LoadSignatures()
 
             virus_list = loadSignatures(signature_File);
 
+            fclose(signature_File);
+            signature_File = NULL; 
+
         }
 
     else
         {
             fprintf(stdout, "Alredy have file to take signatures from: %s", fileNameSig );
         }
+
+
     
 }
 
@@ -460,6 +465,12 @@ link *loadSignatures(FILE *file)
 */
 void PrintSignatures()
 {
+    if(!virus_list)
+    {
+        fprintf(stderr, "Error: no signatures loaded\n");
+        return;
+    }
+    
     list_print(virus_list, stdout);
 }
 
@@ -606,6 +617,8 @@ void FixFile()
         fprintf(stdout, "Neutralizing virus at offset %d\n", virus_array[i]);
         netural_virus(suspected_File_Name, virus_array[i]);
     }
+
+    suspected_File = NULL;
 }
 
 /**
@@ -657,16 +670,13 @@ void quit()
 {
 
     list_free(virus_list);
-    if (signature_File)
-    {
-        fclose(signature_File);
-        signature_File = NULL;
-    }
+
+
     if (suspected_File)
     {
-        fclose(suspected_File);
+        
         suspected_File = NULL;
-        }
+    }
 
     exit(0);
 }
