@@ -64,7 +64,6 @@ int virus_array_size = 0;      // Size of the Array
 
 
 //////////////////////////////Functions Decleration//////////////////////////////
-void handleExit(char *msg, int errKind, int toExit, int errCode, int exit_kind);
 
 // 1A//
 virus *readVirus(FILE *file);
@@ -105,35 +104,7 @@ void quit(); /* Exit the program */
 int main(int argc, char *argv[])
 {
 
-    /*
-    if (argc < 2)
-    {
-        printf("Usage: %s <file> [-d]\n", argv[0]);
-        return 1;
-    }
-    
-    memccpy(suspected_File_Name, argv[1], 0, strlen(argv[1])); // copy the file name to the global variable
-
-    // Safely copy the string
-    strncpy(suspected_File_Name, argv[1], strlen(argv[1]) + 1);
-
-
-    suspected_File = fopen(argv[1], "rb");
-    
-    // Check if a file is loaded successfully
-    if (!suspected_File)
-    {
-        fprintf(stderr, "Error: cannot open file\n");
-        return 1;
-    }
-
-    // Check if the user wants to run in debug mode
-    if (argc == 3 && strcmp(argv[2], "-d") == 0)
-        debugMode = 1;
-
-    strcpy(fileNameSig, "signatures-L");
-    signature_File = fopen(fileNameSig, "rb");
-*/
+ 
     char input[256]; // Buffer for user input
     int choice;
     char *endptr;
@@ -152,7 +123,7 @@ int main(int argc, char *argv[])
 
         int bound = sizeof(funcs) / sizeof(funcs[0]) - 1;
         for (int i = 0; i < bound; i++)
-            printf("%i: %s\n", i, funcs[i].name);
+            printf("%i) %s\n", i+1, funcs[i].name);
 
         printf("\nEnter your choice: ");
 
@@ -160,6 +131,7 @@ int main(int argc, char *argv[])
         if (fgets(input, 16, stdin))
         {
             choice = strtol(input, &endptr, 10); // convert the input to int
+            choice--;                            // Adjust the choice to be 0-based
 
             // Validate input
 
@@ -310,30 +282,7 @@ int validateMagicNumber(FILE *file)
     return 1;
 }
 
-/*
 
- *  Handle Exit Function
- *
- *  msg - Error Message
- *  errKind - Error Kind (1 for perror, 0 for fprintf)
- *  toExit - Exit the program or not
- *  errCode - Error Code
- *  exit_kind - 0 for _exit, 1 for exit
-*/
-void handleExit(char *msg, int errKind, int toExit, int errCode, int exit_kind)
-{
-    if (msg != NULL)
-        if (errKind)
-            perror(msg);
-        else
-            fprintf(stderr, "%s\n", msg);
-
-    if (toExit)
-        if (exit_kind)
-            exit(errCode);
-        else
-            _exit(errCode);
-}
 
 
 
